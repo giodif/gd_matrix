@@ -1,7 +1,7 @@
 {
   "name": "gd_matrix",
-  "version": "1.0.0",
-  "description": "A simple library for matrix operations",
+  "version": "0.0.1",
+  "description": "Matrix operations",
   "main": "gd_matrix.js",
   "watch": {
     "start": "{index,gd_matrix}.js"
