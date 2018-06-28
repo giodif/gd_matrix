@@ -31,23 +31,23 @@ const size = m => m.reduce( (t, r) => t + r.length, 0 )
 
 // diagonal sum operation for calculating determinant
 // square matrix
-const sumdiag = m => {
-    return m.reduce( (sum, row, i) => {
-        return sum + row.reduce( (prod, n, j) => {
-            return prod * m[j][(i + j) % row.length]
-        }, 1 )
-    }, 0 )
-}
+// const sumdiag = m => {
+//     return m.reduce( (sum, row, i) => {
+//         return sum + row.reduce( (prod, n, j) => {
+//             return prod * m[j][(i + j) % row.length]
+//         }, 1 )
+//     }, 0 )
+// }
 
 // only square matrices
-const determinant = m => {
-    if( !square(m) ){ return "NOT SQUARE" }
-    if( size(m) === 1 ){ return m[ 0 ][ 0 ] }
-    if( size(m) === 4 ){ return m[ 0 ][ 0 ] * m[ 1 ][ 1 ] - m[ 0 ][ 1 ] * m[ 1 ][ 0 ] }
-    return sumdiag( m ) - sumdiag( m.map( row => row.reverse() ) )
-}
-
-const invertible = m => square(m) && determinant(m) !== 0
+// this only works on degree 1, 2, 3
+// not a good solution
+// const determinant = m => {
+//     if( !square(m) ){ return "NOT SQUARE" }
+//     if( size(m) === 1 ){ return m[ 0 ][ 0 ] }
+//     if( size(m) === 4 ){ return m[ 0 ][ 0 ] * m[ 1 ][ 1 ] - m[ 0 ][ 1 ] * m[ 1 ][ 0 ] }
+//     return sumdiag( m ) - sumdiag( m.map( row => row.reverse() ) )
+// }
 
 const minor = (m, r = 0, c = 0) => {    
     const w = clone(m)
@@ -55,6 +55,16 @@ const minor = (m, r = 0, c = 0) => {
     w.splice(r, 1)
     return determinant( w )
 }
+
+// use minors to construct the determinant
+const determinant = m => {
+
+    m.map()
+}
+
+const invertible = m => square(m) && determinant(m) !== 0
+
+
 
 // determine the cofactor sign (+, -)
 const sign = (r, c) => Math.pow( -1, r + c )
