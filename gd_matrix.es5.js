@@ -11,6 +11,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 // const vmultiply = (m, v) => mmultiply( [v], m )[0]
 // const similar = (m, w) => m.length === w.length && m[ 0 ].length === w[ 0 ].length
 
+// how many cells in the matrix, irrespective of size
+
+var _2x2 = exports._2x2 = function _2x2(m) {
+    return m[0][0] * m[1][1] - m[0][1] * m[1][0];
+};
+var isNum = exports.isNum = function isNum(n) {
+    return !Array.isArray(n) && !isNaN(parseFloat(n)) && isFinite(n);
+};
 
 // VECTOR OPERATIONS USED HERE
 var vvadd = exports.vvadd = function vvadd(v, u) {
@@ -38,37 +46,27 @@ var times = exports.times = function times(c, f) {
     });
 };
 
+var size = function size(m) {
+    return m.reduce(function (t, r) {
+        return t + r.length;
+    }, 0);
+};
 var square = function square(m) {
     return m.reduce(function (a, v) {
         return a + m.length === v.length ? 0 : 1;
     }, 0) <= 0;
 };
+var invertible = function invertible(m) {
+    return square(m) && determinant(m) !== 0;
+};
+
+// Create a copy of the matrix
 var clone = function clone(m) {
     return m.map(function (row) {
         return row.slice(0);
     });
 };
-
-var col = function col(m, c) {
-    return m.map(function (r) {
-        return r[c];
-    });
-};
-var row = function row(m, r) {
-    return m[r].slice(0);
-};
-var each = function each(m, f) {
-    return m.map(function (r, i) {
-        return r.map(function (n, j) {
-            return f(n, i, j);
-        });
-    });
-};
-var transpose = function transpose(m) {
-    return m[0].map(function (n, i) {
-        return col(m, i);
-    });
-};
+// Create a square identity matrix of s degree
 var identity = function identity(s) {
     return times(s, function (i) {
         return times(s, function (j) {
@@ -76,16 +74,48 @@ var identity = function identity(s) {
         });
     });
 };
+
+// traverse the whole matrix, taking some action on each cell
+var each = function each(m, f) {
+    return m.map(function (r, i) {
+        return r.map(function (n, j) {
+            return f(n, i, j);
+        });
+    });
+};
+
+// get matrix column
+var col = function col(m, c) {
+    return m.map(function (r) {
+        return r[c];
+    });
+};
+// get matrix row
+var row = function row(m, r) {
+    return m[r].slice(0);
+};
+// return transpose of matrix
+var transpose = function transpose(m) {
+    return m[0].map(function (n, i) {
+        return col(m, i);
+    });
+};
+
+// Element wise add matrix w to matrix m
 var madd = function madd(m, w) {
     return m.map(function (v, i) {
         return vvadd(v, w[i]);
     });
 };
+
+// Element wise subtract matrix w form matrix m
 var msubtract = function msubtract(m, w) {
     return m.map(function (v, i) {
         return vvsubtract(v, w[i]);
     });
 };
+
+// Mattrix multiply m by w
 var mmultiply = function mmultiply(m, w) {
     return m.map(function (v, i) {
         return transpose(w).map(function (v2, j) {
@@ -93,6 +123,7 @@ var mmultiply = function mmultiply(m, w) {
         });
     });
 };
+
 var smultiply = function smultiply(m, s) {
     return each(m, function (el) {
         return el * s;
@@ -104,41 +135,9 @@ var sdivide = function sdivide(m, s) {
     });
 };
 
-// how many cells in the matrix, irrespective of size
-var size = function size(m) {
-    return m.reduce(function (t, r) {
-        return t + r.length;
-    }, 0);
-};
-
-// diagonal sum operation for calculating determinant
-// square matrix
-var sumdiag = function sumdiag(m) {
-    return m.reduce(function (sum, row, i) {
-        return sum + row.reduce(function (prod, n, j) {
-            return prod * m[j][(i + j) % row.length];
-        }, 1);
-    }, 0);
-};
-
-// only square matrices
-var determinant = function determinant(m) {
-    if (!square(m)) {
-        return "NOT SQUARE";
-    }
-    if (size(m) === 1) {
-        return m[0][0];
-    }
-    if (size(m) === 4) {
-        return m[0][0] * m[1][1] - m[0][1] * m[1][0];
-    }
-    return sumdiag(m) - sumdiag(m.map(function (row) {
-        return row.reverse();
-    }));
-};
-
-var invertible = function invertible(m) {
-    return square(m) && determinant(m) !== 0;
+// determine the cofactor sign (+, -)
+var sign = function sign(p) {
+    return Math.pow(-1, p);
 };
 
 var minor = function minor(m) {
@@ -153,30 +152,46 @@ var minor = function minor(m) {
     return determinant(w);
 };
 
-// determine the cofactor sign (+, -)
-var sign = function sign(r, c) {
-    return Math.pow(-1, r + c);
-};
-var cofactor = function cofactor(m, r, c) {
-    return minor(m, r, c) * sign(r, c);
+// use minors to construct the determinant
+var determinant = function determinant(m) {
+    if (isNum(m)) {
+        return m;
+    }
+    if (!square(m)) {
+        return false;
+    }
+    var s = size(m);
+    if (s === 4) {
+        return _2x2(m);
+    }
+    if (s === 1) {
+        return m[0][0];
+    }
+    return m.reduce(function (det, row, i) {
+        return det + row[0] * sign(i) * determinant(minor(m, i, 0));
+    }, 0);
 };
 
+var cofactor = function cofactor(m, r, c) {
+    return minor(m, r, c) * sign(r + c);
+};
+
+// These should be good because inverse works properly
 /* nope */var minorMatrix = function minorMatrix(m) {
-    return m.map(function (v, i) {
-        return v.map(function (n, j) {
-            return minor(clone(m), i, j);
-        });
+    return each(m, function (n, r, c) {
+        return minor(m, r, c);
     });
 };
 /* nope */var cofactorMatrix = function cofactorMatrix(m) {
-    return each(minorMatrix(m), function (n, r, c) {
-        return n * sign(r, c);
+    return each(m, function (n, r, c) {
+        return minor(m, r, c) * sign(r + c);
     });
 };
 /* nope */var adjoint = function adjoint(m) {
     return transpose(cofactorMatrix(m));
 };
-/* nope */var inverse = function inverse(m) {
+
+var inverse = function inverse(m) {
     return sdivide(adjoint(m), determinant(m));
 };
 
