@@ -1,6 +1,6 @@
 {
   "name": "gd_matrix",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Matrix operations",
   "main": "gd_matrix.js",
   "watch": {
